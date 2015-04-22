@@ -1,3 +1,8 @@
+// written by Rayan Chikhi in 2014
+// BSD License 
+// started from the Hello World example from https://github.com/bitliner/d3-bipartite-graph
+
+
 var svg;
 
 var max_ni = 0;
