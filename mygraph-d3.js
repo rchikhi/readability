@@ -224,7 +224,7 @@ var load_graph = function(){
 	// requires that links are annotated with ni's 
 	nodes_in_biclique_order(1, nodes, links);
 	
-	draw_graph(false);
+	draw_graph(false); // set it to true to force lexicographical order (right now is biclique order); this could be an interface parameter..
 
 	update_selection_div(false);
 }
