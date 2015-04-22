@@ -82,7 +82,7 @@ svg *::-webkit-selection {
         <p>This application enables to create and visualize ℓ-decompositions of overlap graphs.</p>
         For more details, refer to the publication: <a href="http://arxiv.org/abs/1504.04616">On the readability of overlap digraphs</a>.<br>
 
-    See an example: <input type='button' id="load_h4" value="Load H_4 labeling" style="width: 180px; margin-top:20px;"><br>
+    Load example labelings for: <input type='button' id="load_h3" value="H_3" style="width: 50px; margin-top:20px;"> or <input type='button' id="load_h4" value="H_4" style="width: 50px; margin-top:20px;"><br>
 
     Or, 
 	<span style="vertical-align:middle;"> <input type='button' id="create_new" value="Create new" style="width: 130px; margin-top:20px;">
@@ -133,11 +133,17 @@ svg *::-webkit-selection {
 				draw_graph(true);
 				$('#ni_selection').show();
 			});
+			$( "#load_h3" ).button();
+			$( "#load_h3").on("click",function(){
+				load_h3_labelling();
+				$('#ni_selection').show();
+			});
 			$( "#load_h4" ).button();
 			$( "#load_h4").on("click",function(){
 				load_h4_labelling();
 				$('#ni_selection').show();
 			});
+
 			$( "#import_export" ).button();
 			$( "#import_export").on("click",function(){
 				import_export();

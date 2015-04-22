@@ -195,6 +195,13 @@ function load_h4_labelling()
 	load_graph();
 }
 
+function load_h3_labelling()
+{
+    // optimal: readability is at least 5 (checked by Martin, 12/14/13 email)
+    labelling = { "l-001": "ffadb", "l-010": "adbgc", "l-011": "ffdbc", "l-100": "fcbad", "l-101": "fdacb", "l-110": "fbgcd", "l-111": "fbcda",  "r-001": "bcdaf", "r-010": "cdaff", "r-011": "bgcdf", "r-100": "dacbf", "r-101": "dbcff", "r-110": "cbadf", "r-111": "adbgc"}
+    load_graph();
+}
+
 
 // loads a graph given a labelling (global variable)
 var load_graph = function(){
