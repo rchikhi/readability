@@ -1,14 +1,22 @@
 <!DOCTYPE html>
 <meta charset="utf-8">
 <style>
+html, body
+{
+    height: 100%;
+}
 
-/*.node {
-	stroke: #fff;
-	stroke-width: 1.5px;
-}*/
+body {
+margin-left: 30px;
+    vertical-align:middle;
+}
+
+input
+{
+     top: -10px;
+}
 
 .node text {
-  pointer-events: none;
   font: 10px sans-serif;
 }
 
@@ -17,13 +25,335 @@
 	stroke-opacity: .6;
 }
 
-</style>
-<body>
-	<script type="text/javascript" src="http://d3js.org/d3.v3.min.js"></script>
-	<script type="text/javascript" src="mygraph-d3.js"></script>
-	<!-- <script type="text/javascript" src="d3.v3.min.js"></script> -->
+.ui-button.ui-widget
+{
+	width: 80px;
+	text-align:left;
+}
+.ni-button{
+	position:relative;
+}
 
-<!-- </body>
-</html> -->
+.ni-button-info {
+	position:absolute;
+	top: 0px;
+	right: 5%;
+	color: grey;
+	font-size: 12px;
+	line-height:10px;
+	z-index: 2;
+}
+
+/* disable selection of labels on graph */
+svg *::selection {
+    background : transparent;
+}
+
+svg *::-moz-selection {
+    background:transparent;
+}
+
+svg *::-webkit-selection {
+    background:transparent;
+}
+
+#status-area .flash_message {
+    padding: 5px;
+    color: green;
+}
+</style>
+<title>Readability app</title>
+<body>
+	<script src="d3.v3.min.js"></script>
+	<script src="//cdnjs.cloudflare.com/ajax/libs/es5-shim/2.3.0/es5-shim.js"></script> <!-- ecma5 compatibility -->
+	
+	<script src="readability.js"></script>
+	<script src="labelling.js"></script>
+	<script src="mygraph-d3.js"></script>
+	<script src="jquery-1.10.2.min.js"></script>
+	
+	<script src="jquery.nouislider.js"></script>
+	<link rel="stylesheet" href="jquery.nouislider.css">
+	
+	<link rel="stylesheet" href="jquery-ui.css" />
+	<script src="jquery-ui.js"></script>
+	<script src="jquery.flashmessage.js"></script>
+	<div style="float:left; width: 470px">
+        <p>This application enables to create and visualize ℓ-decompositions of overlap graphs.</p>
+        For more details, refer to the publication: <a href="http://arxiv.org/abs/1504.04616">On the readability of overlap digraphs</a>.<br>
+
+    See an example: <input type='button' id="load_h4" value="Load H_4 labeling" style="width: 180px; margin-top:20px;"><br>
+
+    Or, 
+	<span style="vertical-align:middle;"> <input type='button' id="create_new" value="Create new" style="width: 130px; margin-top:20px;">
+    <input  type="text" value="5" id="nb_left_nodes" size="1">
+	by 
+	<input type="text" value="5" id="nb_right_nodes" size="1">
+	empty graph
+	with maximum overlap length of
+	<input type="text" value="8" id="nb_nis" size="1">
+    </span><br>
+	<input type='button' id="import_export" value="Load / save graph" style="width: 180px; margin-top:20px;"><br>
+
+	<div id="ni_selection" style="display:none;">
+		<input type='checkbox' id="hadamard_edges"><label for="edit_edges" style="width:160px">Only Hadamard edges (&lt;left node, right node&gt; = 1 mod 2)</label><br>
+
+	<h3 id="h3_divs"></h3>
+	<div id="status-area" style="height:20px">&nbsp;</div>
+	<div id="individual-nis"></div>
+	<div id="ni-stats">
+	</div>
+	<br>
+    <input type='button' id="hide_all" value="Hide all Gi's" style="width: 100px; white-space: normal;">
+    <input type='button' id="show_all" value="Show all Gi's" style="width: 100px; white-space: normal;" title=''>
+	<span class='ni-button' id='span_n_123321'><input type='checkbox' id="n_123321" style="white-space: normal; " title=''>
+	<label for='n_123321' style="width: 140px; font-size: 13px"><span class='ni-button-info'>0</span>Show missing Hadamard edges</label></span>
+	<!--<input type='checkbox' id="edit_edges">
+	<label for="edit_edges" style="width:160px">Add/Remove edge</label><br>-->
+	</div>
+	</div>
+	<div id="bipartitegraph" style="float:left"></div>
+
+	<script>
+		/*
+		so, quickly:
+		- things that interact with the DOM are mostly here
+		- graph handling is in mygraph-d3
+		- readability specific stuff is in readability.js and labelling.js
+		*/
+		$( document ).ready(function() {
+			
+			// create the "new graph" buttons 
+		 	$( "#create_new" ).button();
+			$( "#create_new").on("click",function(){
+				var nb_left = parseInt($('#nb_left_nodes').val());
+				var nb_right = parseInt($('#nb_right_nodes').val());
+				max_ni = parseInt($('#nb_nis').val());
+				new_graph(nb_left,nb_right,nb_nis);
+				draw_graph(true);
+				$('#ni_selection').show();
+			});
+			$( "#load_h4" ).button();
+			$( "#load_h4").on("click",function(){
+				load_h4_labelling();
+				$('#ni_selection').show();
+			});
+			$( "#import_export" ).button();
+			$( "#import_export").on("click",function(){
+				import_export();
+				$('#ni_selection').show();
+			});
+		});
+		
+		// called when we know the number of ni's
+		var index_callback = function(){
+		
+			// create the n_i buttons
+			var divni = document.getElementById('individual-nis');
+			var html = "";
+			for( var i = 0; i <= max_ni; i++ ){
+				number_of_nis = ""
+				number_of_nis = "<span class='ni-button-info'>" + nb_nis[i] + "</span>"
+				html += "<span class='ni-button' id='span_n_" + i + "'>" + number_of_nis + "<input type='checkbox' id='n_" + i + "' title=''><label for='n_" + i + "'>G<sub>" + i + "</sub></label></span>";
+				if (i % 5 == 0)
+					html += "<br>"
+			}
+			divni.innerHTML = html;
+			
+			// special case: n0
+			$('label[for=n_'+0+']').html('Remove').css('width','100px');
+			$( "#n_" + 0 ).button();
+			$( "#span_n_" + 0 ).hide();
+			$( "#span_n_" + 0 + " .ni-button-info").hide();
+			
+			var backup_display_ni;
+			var highlighted_ni = 0;
+			
+			var list_nis = get_list_nis();
+			
+			// behavior of n_i buttons (toggle/hover)
+			for (var index = 0; index < list_nis.length; index++)
+			//for( var i = 1; i <= max_ni; i++ ){ // not anymore, because now we have a special n_i for missing hadamard edges
+			{
+				var i = list_nis[index];
+				$( "#n_" + i ).button();
+				$( "#n_" + i ).change(function(){
+					ni = $( this ).attr("id"); 
+					real_i = ni.substring(2,ni.length); // super important to get the correct i (too lazy to do a closure)
+					
+					if (selection_mode) // disable toggling visibility of ni's during selection mode
+						return;
+						
+					display_ni[real_i] = $(this).is(':checked');
+					if (highlighted_ni == real_i)
+						backup_display_ni = display_ni[real_i];
+					update_links();
+				});
+				$( "#span_n_" + i ).hover(function() {
+					if (selection_mode) // disable highlighting during editing
+						return;
+					ni = $( this ).attr("id");
+					real_i = ni.substring(7,ni.length);
+					
+					// temporarily display ni no matter what
+					backup_display_ni = display_ni[real_i];
+					display_ni[real_i] = true;
+					highlighted_ni = real_i;
+					highlight(real_i);
+					update_links(true);
+				},function() {
+					if (selection_mode || highlighted_ni == 0)
+						return;
+					ni = $( this ).attr("id");
+					real_i = ni.substring(7,ni.length);
+					
+					// restore ni display state
+					display_ni[real_i] = backup_display_ni;
+
+					update_links();
+					highlighted_ni = 0;
+					unhighlight();
+				});
+			}
+			
+			update_selection_div(selection_mode);
+
+			// edges add/remove button handling
+			for( var i = 0; i <= max_ni; i++ ){
+				$( "#n_" + i ).on("click",function(event){
+					ni = $( this ).attr("id");
+					real_i = parseInt(ni.substring(2,ni.length));
+					if (selection_mode)
+					{
+						// stop checkbox from changing state
+						event.stopPropagation();
+						
+						if (!can_label_selected_edges(real_i))
+						{
+							$('#status-area').flash_message({
+								text: 'Cannot do this, would produce an inconsistent labelling',
+							});
+						}
+						else
+						{
+							add_remove_selected_edges(real_i);
+							$('#status-area').flash_message();
+						}
+
+						update_selection_div(selection_mode);
+					}
+				});
+			}
+			
+			// show all/hide all buttons
+			$( "#hide_all" ).button();
+			$( "#show_all" ).button();
+			$( "#show_all").on("click",function(){
+
+				for( var i = 1; i <= max_ni; i++ )
+				{
+					if (!(nb_nis[i] > 0))
+						continue;
+					$( "#n_" + i ).prop( "checked", true );
+					$( "#n_" + i ).trigger("change");
+				}
+				update_links();
+			});
+			$( "#hide_all").on("click",function(){
+				for( var i = 1; i <= max_ni; i++ )
+				{
+					if (!(nb_nis[i] > 0))
+						continue;
+					$( "#n_" + i ).prop( "checked", false );
+					$( "#n_" + i ).trigger("change");
+				}
+				update_links();
+			});
+			
+			// only hadamard checkbox
+			$('#hadamard_edges').change(function() {
+				only_hadamard_edges = $(this).is(':checked');
+			});
+
+		};
+
+		// update the ni's area when we select edges
+		function update_selection_div(show_selection)
+		{
+			// change text
+			var divnistats = document.getElementById('h3_divs');
+			var html;
+			if (show_selection)
+			{
+				html = "<span style='color:green'>Click a G<sub>i</sub> to add selected edges </span>";
+			}
+			else
+				html = "Select individual G<sub>i</sub>'s, or click on nodes to add/remove edges";
+			divnistats.innerHTML = html;
+			
+			// enable/disable buttons
+			var list_nis = get_list_nis();
+			for (var index = 0; index < list_nis.length; index++)
+			//for( var i = 0; i <= max_ni; i++ ){
+			{
+				var i = list_nis[index];
+				$( "#n_" + i ).button("enable");
+				if (show_selection)
+				{
+					/*if (!feasible_nis[i]) // TODO
+						$( "#n_" + i ).button("disable");*/
+				}
+				else
+				{
+					if (!(nb_nis[i] > 0))
+						$( "#n_" + i ).button("disable");
+				}
+				$( "#span_n_" + i + " .ni-button-info").html(nb_nis[i]);
+							
+				// deselect all nis in selection mode
+				if (show_selection)
+				{
+					$("#n_" + i).prop('checked', false);
+				}
+				$("#n_" + i).button( "refresh" ); // super important, else the effect of changing prop do not appear
+			}
+
+			// show/hide the remove button
+			if (show_selection)
+				$( "#span_n_" + 0 ).show();
+			else
+				$( "#span_n_" + 0 ).hide();			
+				
+			// show/hide selected n_i's text
+			if (show_selection)
+				$('#ni-stats').hide();
+			else
+				$('#ni-stats').show();
+		}
+		
+		function set_non_empty_nis_in_selection()
+		{
+			// select all non-empty ni's when switching back to normal mode
+			for( var i = 0; i <= max_ni; i++ ){
+				$("#n_" + i).prop('checked', nb_nis[i]>0);
+				$("#n_" + i).button( "refresh" ); // super important, else the effect of changing prop do not appear
+			}
+		}
+	
+	// ---- background click detection
+	// http://stackoverflow.com/questions/4660633/detect-click-inside-outside-of-element-with-single-event-handler
+	$(function() {
+    $("body").click(function(e) {
+        if (e.target.id == "bipartitegraph" || $(e.target).parents("#bipartitegraph").size() || e.target.id == "ni_selection" || $(e.target).parents("#ni_selection").size()) { 
+			// click inside graph
+        } else { 
+			//console.log(e.target.type);
+			background_click();
+        }
+    });
+})
+	</script>
+ </body>
+</html> 
 
 
