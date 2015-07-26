@@ -4,6 +4,7 @@
 html, body
 {
     height: 100%;
+	font: 12px sans-serif;	
 }
 
 body {
@@ -27,7 +28,7 @@ input
 
 .ui-button.ui-widget
 {
-	width: 80px;
+	width: auto;
 	text-align:left;
 }
 .ni-button{
@@ -65,7 +66,7 @@ svg *::-webkit-selection {
 <title>Readability app</title>
 <body>
 	<script src="d3.v3.min.js"></script>
-	<script src="//cdnjs.cloudflare.com/ajax/libs/es5-shim/2.3.0/es5-shim.js"></script> <!-- ecma5 compatibility -->
+	<script src="es5-shim.min.js"></script> <!-- ecma5 compatibility -->
 	
 	<script src="readability.js"></script>
 	<script src="labelling.js"></script>
@@ -78,22 +79,22 @@ svg *::-webkit-selection {
 	<link rel="stylesheet" href="jquery-ui.css" />
 	<script src="jquery-ui.js"></script>
 	<script src="jquery.flashmessage.js"></script>
-	<div style="float:left; width: 470px">
+	<div style="float:left; width: 460px">
         <p>This application enables to create and visualize ℓ-decompositions of overlap graphs.</p>
         For more details, refer to the publication: <a href="http://arxiv.org/abs/1504.04616">On the readability of overlap digraphs</a>.<br>
 
-    Load example labelings for: <input type='button' id="load_h3" value="H_3" style="width: 50px; margin-top:20px;"> or <input type='button' id="load_h4" value="H_4" style="width: 50px; margin-top:20px;"><br>
+    Load example labelings for: <input type='button' id="load_h3" value="H_3" style="width:auto; margin-top:20px;"> or <input type='button' id="load_h4" value="H_4" style="width:auto; margin-top:20px;"><br>
 
-    Or, 
-	<span style="vertical-align:middle;"> <input type='button' id="create_new" value="Create new" style="width: 130px; margin-top:20px;">
-    <input  type="text" value="5" id="nb_left_nodes" size="1">
+    
+	<span style="vertical-align:middle;"> <input type='button' id="create_new" value="Create new" style="width:auto; margin-top:20px;">
+    <input  type="text" value="5" id="nb_left_nodes" size="1" style="width:20px">
 	by 
-	<input type="text" value="5" id="nb_right_nodes" size="1">
+	<input type="text" value="5" id="nb_right_nodes" size="1" style="width:20px">
 	empty graph
 	with maximum overlap length of
-	<input type="text" value="8" id="nb_nis" size="1">
+	<input type="text" value="8" id="nb_nis" size="1" style="width:20px">
     </span><br>
-	<input type='button' id="import_export" value="Load / save graph" style="width: 180px; margin-top:20px;"><br>
+	<input type='button' id="import_export" value="Load / save graph" style="width:auto; margin-top:20px;"><br>
 
 	<div id="ni_selection" style="display:none;">
 		<input type='checkbox' id="hadamard_edges"><label for="edit_edges" style="width:160px">Only Hadamard edges (&lt;left node, right node&gt; = 1 mod 2)</label><br>
@@ -104,8 +105,8 @@ svg *::-webkit-selection {
 	<div id="ni-stats">
 	</div>
 	<br>
-    <input type='button' id="hide_all" value="Hide all Gi's" style="width: 100px; white-space: normal;">
-    <input type='button' id="show_all" value="Show all Gi's" style="width: 100px; white-space: normal;" title=''>
+    <input type='button' id="hide_all" value="Hide all Gi's" style="width:auto; white-space: normal;">
+    <input type='button' id="show_all" value="Show all Gi's" style="width:auto; white-space: normal;" title=''>
 	<span class='ni-button' id='span_n_123321'><input type='checkbox' id="n_123321" style="white-space: normal; " title=''>
 	<label for='n_123321' style="width: 140px; font-size: 13px"><span class='ni-button-info'>0</span>Show missing Hadamard edges</label></span>
 	<!--<input type='checkbox' id="edit_edges">
@@ -167,7 +168,7 @@ svg *::-webkit-selection {
 			divni.innerHTML = html;
 			
 			// special case: n0
-			$('label[for=n_'+0+']').html('Remove').css('width','100px');
+			$('label[for=n_'+0+']').html('Remove').css('width','auto');
 			$( "#n_" + 0 ).button();
 			$( "#span_n_" + 0 ).hide();
 			$( "#span_n_" + 0 + " .ni-button-info").hide();
@@ -294,7 +295,7 @@ svg *::-webkit-selection {
 				html = "<span style='color:green'>Click a G<sub>i</sub> to add selected edges </span>";
 			}
 			else
-				html = "Select individual G<sub>i</sub>'s, or click on nodes to add/remove edges";
+				html = "Select individual G<sub>i</sub>'s (below), or click on nodes (right) to add/remove edges";
 			divnistats.innerHTML = html;
 			
 			// enable/disable buttons
